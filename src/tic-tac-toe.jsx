@@ -1,70 +1,85 @@
-import  { useState } from "react";
+import { useEffect, useState } from "react";
 import Board from "./components/Board";
 
+const array = new Array(9).fill(null);
 
-const allSquares = Array(9).fill(null);
+const getWinner = (squares) => {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
 
-
-const calculateWinner = (square)=>{
-    const lines = [
-        [0,1,2],
-        [3,4,5],
-        [6,7,8],
-        [0,3,6],
-        [1,4,7],
-        [2,5,8],
-        [0,4,8],
-        [2,4,6]
-    ]
-
-    for (let [a,b,c] of lines){
-        if(square[a]&&square[a] === square[b]&&square[a] === square[c]){
-            return square[a]
-        }
-
+  for (let [a, b, c] of lines) {
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a]; 
     }
-    return square.includes(null) ? null : "Draw"
-}
+  }
 
-const TicTakToe = () => {
-    const [square,setSquares] = useState(allSquares);
-    const [isXNext,setIsXNext] = useState(true);
+  return squares.includes(null) ? null : "Draw"; 
+};
 
-    const winner = calculateWinner(square)
+export const TicTacToe = () => {
+  const [squares, setSquares] = useState(array);
+  const [isX, setX] = useState(true);
 
-    const handleClick = (index)=>{
-        if(square[index]||winner){
-            return;
-        }
+  const winner = getWinner(squares);
 
-        const nextSquare = square.slice();
-        nextSquare[index] = isXNext ? "X" :"O"
-        setSquares(nextSquare);
-        setIsXNext(!isXNext);
+  const handleSquareClick = (index) => {
+    if (squares[index] || winner) {
+      return;
     }
+    const updatedSquares = [...squares];
+    updatedSquares[index] = isX ? "x" : "o";
+    setSquares(updatedSquares);
+    setX((prev) => !prev); 
+  };
 
-
-    const resetGame=()=>{
-        setIsXNext(true);
-        setSquares(allSquares)
+  const getEmptyIndex = () => {
+    let result = [];
+    for (let i = 0; i < squares.length; i++) {
+      if (squares[i] === null) {
+        result.push(i);
+      }
     }
+    return result;
+  };
+
+  const generateRandomNumber = (max = 8, min = 0) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+
+  const makeNextMove = () => {
+    const emptyIndex = getEmptyIndex();
+    let number = generateRandomNumber();
+    while (!emptyIndex.includes(number)) {
+      number = generateRandomNumber(); 
+    }
+    return number;
+  };
+
+  useEffect(() => {
+    if (!isX && winner === null) { 
+      const index = makeNextMove();
+      handleSquareClick(index);
+    }
+  }, [isX, winner]);
+
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold mb-4">Tic Tac Toe</h1>
+    <div className="flex flex-col justify-center h-screen max-w-2xl mx-auto">
+      <h1>TicTacToe</h1>
+      <Board squares={squares} onSquareClick={handleSquareClick} />
+
+      {winner && <p>{winner==="Draw" ? winner :`Winner : ${winner} `}</p>} 
 
 
-      <Board square={square} onClick={handleClick} />
-      <p className="my-4 text-xl">
-        {winner ? `Winner: ${winner}` : `Next Player: ${isXNext ? 'X' : 'O'}`}
-      </p>
-      <button
-        onClick={resetGame}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Reset Game
-      </button>
     </div>
   );
 };
 
-export default TicTakToe;
+export default TicTacToe;
